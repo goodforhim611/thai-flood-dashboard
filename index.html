@@ -29,7 +29,7 @@
           🌊 เช็กพื้นที่เสี่ยงน้ำท่วมย้อนหลัง
         </h1>
         <p class="text-blue-200 text-xs md:text-sm">
-          ดูความถี่น้ำท่วมรายจังหวัด เจาะลึกรายตำบล-หมู่บ้าน พร้อมจุดอพยพและแนวทางปฏิบัติ
+          ดูความถี่น้ำท่วมรายจังหวัด เจาะลึกรายเขต/ตำบล ถนนท่วมซ้ำซาก พร้อมจุดอพยพและแนวทางปฏิบัติ
         </p>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -54,8 +54,8 @@
         <a href="tel:1669" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1 rounded-full shadow-sm transition">
           🚑 1669 เจ็บป่วยฉุกเฉิน
         </a>
-        <a href="tel:191" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-3 py-1 rounded-full shadow-sm transition">
-          🚓 191 เหตุด่วนเหตุร้าย
+        <a href="tel:1555" class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-3 py-1 rounded-full shadow-sm transition">
+          📞 1555 สายด่วน กทม.
         </a>
       </div>
     </div>
@@ -99,13 +99,13 @@
 
   </main>
 
-  <!-- POPUP 1: แสดงตารางรายหมู่บ้าน เมื่อคลิกที่ตำบล -->
+  <!-- POPUP 1: รายละเอียดพื้นที่ (กทม. = ถนนน้ำท่วมจริง / ต่างจังหวัด = รายหมู่บ้าน) -->
   <div id="villageModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="bg-blue-950 text-white px-6 py-4 flex items-start justify-between">
         <div>
-          <span class="text-xs uppercase tracking-wider text-blue-300">รายละเอียดระดับตำบลและหมู่บ้าน</span>
-          <h2 id="modalTitle" class="text-xl font-bold mt-0.5">ตำบล... อำเภอ... จังหวัด...</h2>
+          <span id="modalCategory" class="text-xs uppercase tracking-wider text-blue-300">รายละเอียดระดับพื้นที่</span>
+          <h2 id="modalTitle" class="text-xl font-bold mt-0.5">...</h2>
           <p id="modalSubtitle" class="text-xs text-blue-200 mt-1"></p>
         </div>
         <button onclick="closeModal('villageModal')" class="text-white/80 hover:text-white text-3xl leading-none cursor-pointer">&times;</button>
@@ -113,44 +113,38 @@
 
       <div class="border-b border-slate-200 px-6 pt-3 flex gap-4 bg-slate-50">
         <button id="tabVillageBtn" onclick="switchModalTab('village')" class="pb-2.5 text-sm font-bold border-b-2 border-blue-600 text-blue-700 cursor-pointer">
-          🏘️ สถิติน้ำท่วมรายหมู่บ้าน
+          🏘️ สถิติน้ำท่วมในพื้นที่
         </button>
         <button id="tabShelterBtn" onclick="switchModalTab('shelter')" class="pb-2.5 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 cursor-pointer">
           ⛺ ศูนย์อพยพ & แนวทางปฏิบัติ
         </button>
       </div>
 
+      <!-- Tab 1: ตารางข้อมูล (ปรับคอลัมน์อัตโนมัติระหว่าง กทม. กับต่างจังหวัด) -->
       <div id="tabVillageContent" class="p-6 overflow-y-auto flex-1 space-y-4">
         <div class="flex flex-col sm:flex-row gap-3 justify-between">
-          <input type="text" id="villageSearchInput" placeholder="🔍 ค้นหาชื่อหมู่บ้าน หรือ หมู่ที่..."
-            class="border border-slate-300 rounded-lg px-3.5 py-2 text-sm w-full sm:w-80 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-          <span id="villageCountBadge" class="text-xs text-slate-500 self-center"></span>
+          <input type="text" id="villageSearchInput" placeholder="🔍 ค้นหา..."
+            class="border border-slate-300 rounded-lg px-3.5 py-2 text-sm w-full sm:w-96 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <span id="villageCountBadge" class="text-xs text-slate-500 self-center font-medium"></span>
         </div>
 
         <div class="border border-slate-200 rounded-xl overflow-x-auto">
           <table class="min-w-full text-sm text-left">
-            <thead class="bg-slate-100 text-slate-700 font-semibold">
-              <tr>
-                <th class="px-4 py-3">หมู่ที่</th>
-                <th class="px-4 py-3">ชื่อหมู่บ้าน</th>
-                <th class="px-4 py-3">ระดับความเสี่ยง</th>
-                <th class="px-4 py-3">ประวัติเคยท่วม (ปี)</th>
-                <th class="px-4 py-3">หมายเหตุ / จุดเฝ้าระวัง</th>
-              </tr>
-            </thead>
+            <thead id="detailTableHead" class="bg-slate-100 text-slate-700 font-semibold"></thead>
             <tbody id="villageTableBody" class="divide-y divide-slate-200"></tbody>
           </table>
         </div>
-        <p id="villageDataNote" class="text-xs text-slate-400"></p>
+        <p id="villageDataNote" class="text-xs text-slate-500"></p>
       </div>
 
+      <!-- Tab 2: ศูนย์อพยพ & แนวทางปฏิบัติ -->
       <div id="tabShelterContent" class="p-6 overflow-y-auto flex-1 hidden space-y-4">
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-950 space-y-1">
           <p class="font-bold">📌 หากเริ่มมีน้ำท่วมขังในพื้นที่นี้ ควรทำอย่างไร?</p>
           <ul class="list-disc pl-5 space-y-1 text-xs md:text-sm">
             <li>ตัดสะพานไฟชั้นล่างทันที และย้ายปลั๊กไฟ/เครื่องใช้ไฟฟ้าขึ้นที่สูง</li>
-            <li>เตรียมกระเป๋าฉุกเฉิน (ยาประจำตัว เอกสารสำคัญ ไฟฉาย แบตสำรอง น้ำดื่ม)</li>
-            <li>หากระดับน้ำสูงเกิน 50 ซม. หรือมีผู้สูงอายุ/เด็กเล็ก ให้โทร <b>1784</b> หรือเคลื่อนย้ายไปยังศูนย์อพยพด้านล่าง</li>
+            <li>หลีกเลี่ยงการขับรถเก๋งเล็กผ่านจุดที่น้ำลึกเกิน 30 ซม. (ระดับขอบประตูรถ)</li>
+            <li>หากระดับน้ำสูงหรือต้องการความช่วยเหลือ โทร <b>1784</b> (ปภ.) หรือ <b>1555</b> (กทม.)</li>
           </ul>
         </div>
         <h3 class="font-bold text-slate-800 text-sm">⛺ รายชื่อศูนย์อพยพในเขตจังหวัดนี้</h3>
@@ -166,21 +160,22 @@
         <h2 class="text-lg font-bold text-blue-950">🆘 คู่มือประชาชน: เตรียมพร้อม & เบอร์ฉุกเฉินน้ำท่วม</h2>
         <button onclick="closeModal('guideModal')" class="text-slate-400 hover:text-slate-700 text-3xl leading-none cursor-pointer">&times;</button>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
         <a href="tel:1784" class="block bg-red-50 hover:bg-red-100 border border-red-200 p-3 rounded-xl transition">
-          <div class="text-xs text-red-700 font-semibold">แจ้งเหตุสาธารณภัย (ปภ.)</div>
-          <div class="text-2xl font-extrabold text-red-600 mt-1">📞 1784</div>
-          <div class="text-[11px] text-red-500 mt-0.5">กดเพื่อโทรออก</div>
+          <div class="text-xs text-red-700 font-semibold">แจ้งเหตุ ปภ.</div>
+          <div class="text-xl font-extrabold text-red-600 mt-1">📞 1784</div>
+        </a>
+        <a href="tel:1555" class="block bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 p-3 rounded-xl transition">
+          <div class="text-xs text-indigo-700 font-semibold">สายด่วน กทม.</div>
+          <div class="text-xl font-extrabold text-indigo-600 mt-1">📞 1555</div>
         </a>
         <a href="tel:1460" class="block bg-blue-50 hover:bg-blue-100 border border-blue-200 p-3 rounded-xl transition">
-          <div class="text-xs text-blue-700 font-semibold">สายด่วนกรมชลประทาน</div>
-          <div class="text-2xl font-extrabold text-blue-600 mt-1">📞 1460</div>
-          <div class="text-[11px] text-blue-500 mt-0.5">กดเพื่อโทรออก</div>
+          <div class="text-xs text-blue-700 font-semibold">กรมชลประทาน</div>
+          <div class="text-xl font-extrabold text-blue-600 mt-1">📞 1460</div>
         </a>
         <a href="tel:1669" class="block bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 p-3 rounded-xl transition">
-          <div class="text-xs text-emerald-700 font-semibold">เจ็บป่วยฉุกเฉิน</div>
-          <div class="text-2xl font-extrabold text-emerald-600 mt-1">🚑 1669</div>
-          <div class="text-[11px] text-emerald-500 mt-0.5">กดเพื่อโทรออก</div>
+          <div class="text-xs text-emerald-700 font-semibold">แพทย์ฉุกเฉิน</div>
+          <div class="text-xl font-extrabold text-emerald-600 mt-1">🚑 1669</div>
         </a>
       </div>
       <div class="space-y-2 text-sm text-slate-700">
@@ -238,7 +233,20 @@
     let provinceStatsMap = {};
     let provincesGeoData = null;
     let tambonsGeoData = null;
-    let currentVillages = [];
+
+    // แคชข้อมูลถนนน้ำท่วม กทม. จากตาราง bkk_street_flooding
+    let bkkEpisodesCache = null;
+    let bkkCountByDistrict = {};
+    let currentModalMode = 'province'; // 'bkk' หรือ 'province'
+    let currentModalRows = [];
+
+    function isBangkok(name) {
+      return String(name || '').includes('กรุงเทพ');
+    }
+
+    function cleanAdminName(name) {
+      return String(name || '').replace(/^(เขต|แขวง|อำเภอ|ตำบล|อ\.|ต\.)\s*/g, '').trim();
+    }
 
     function getProvCode(p) {
       return String(p.pro_code ?? p.PROV_CODE ?? p.PROVINCE_ID ?? p.ADM1_PCODE ?? '').replace('TH', '').trim();
@@ -247,15 +255,30 @@
       return String(p.pro_th ?? p.PROV_NAMT ?? p.PROVINCE_NAME ?? p.name_th ?? p.ADM1_TH ?? '').trim();
     }
     function getAmphoeName(p) {
-      return String(p.amp_th ?? p.AMP_NAMT ?? p.AMPHOE_NAME ?? p.ADM2_TH ?? '').trim();
+      return cleanAdminName(p.amp_th ?? p.AMP_NAMT ?? p.AMPHOE_NAME ?? p.ADM2_TH ?? '');
     }
     function getTambonName(p) {
-      return String(p.tam_th ?? p.TAM_NAMT ?? p.TAMBON_NAME ?? p.ADM3_TH ?? getAmphoeName(p)).trim();
+      return cleanAdminName(p.tam_th ?? p.TAM_NAMT ?? p.TAMBON_NAME ?? p.ADM3_TH ?? getAmphoeName(p));
     }
     function getSubCode(p) {
       return Number(String(p.tam_code ?? p.amp_code ?? p.TAMBON_ID ?? 10).replace(/\D/g, '')) || 10;
     }
 
+    // ตัวช่วยดึงค่าจากคอลัมน์ในตาราง bkk_street_flooding (รองรับหลายชื่อคอลัมน์)
+    function pickField(row, keywords) {
+      const keys = Object.keys(row);
+      for (const kw of keywords) {
+        const exact = keys.find(k => k.toLowerCase() === kw.toLowerCase());
+        if (exact && row[exact] !== null && row[exact] !== '') return row[exact];
+      }
+      for (const kw of keywords) {
+        const partial = keys.find(k => k.toLowerCase().includes(kw.toLowerCase()));
+        if (partial && row[partial] !== null && row[partial] !== '') return row[partial];
+      }
+      return null;
+    }
+
+    // พื้นหลังแผนที่ Esri (ฟรี ไม่บล็อกการเปิดไฟล์ในเครื่อง)
     function initMap() {
       map = L.map('map').setView([13.2, 101.2], 6);
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
@@ -280,6 +303,18 @@
       return { text: '🟢 เสี่ยงต่ำ (ท่วมน้อย)', badge: 'bg-green-100 text-green-800' };
     }
 
+    // แปลงความลึก (ซม.) เป็นคำแนะนำที่ประชาชนเข้าใจง่าย
+    function describeDepth(depthRaw) {
+      if (depthRaw === null || depthRaw === undefined || depthRaw === '') return { text: '-', cls: 'bg-slate-100 text-slate-600' };
+      const str = String(depthRaw);
+      const nums = str.match(/\d+(\.\d+)?/g);
+      const maxCm = nums ? Math.max(...nums.map(Number)) : 0;
+      if (maxCm >= 30) return { text: `${str} ซม. (รถเล็กควรเลี่ยง)`, cls: 'bg-red-100 text-red-800' };
+      if (maxCm >= 15) return { text: `${str} ซม. (เสมอฟุตบาท)`, cls: 'bg-orange-100 text-orange-800' };
+      if (maxCm > 0)   return { text: `${str} ซม. (ขังผิวจราจร)`, cls: 'bg-yellow-100 text-yellow-800' };
+      return { text: str, cls: 'bg-slate-100 text-slate-700' };
+    }
+
     async function fetchGeoJSONWithFallback(urls) {
       for (const url of urls) {
         try {
@@ -290,6 +325,44 @@
         }
       }
       throw new Error('ไม่สามารถโหลดไฟล์เส้นขอบเขตแผนที่ได้ กรุณาตรวจสอบอินเทอร์เน็ต');
+    }
+
+    // ดึงข้อมูล bkk_street_flooding ทั้งหมด (แบ่งดึงทีละ 1,000 แถวตามลิมิต Supabase)
+    async function loadBkkStreetData() {
+      if (bkkEpisodesCache !== null) return bkkEpisodesCache;
+
+      let allRows = [];
+      let from = 0;
+      const step = 1000;
+
+      while (true) {
+        const { data, error } = await db
+          .from('bkk_street_flooding')
+          .select('*')
+          .range(from, from + step - 1);
+
+        if (error) {
+          console.error('โหลด bkk_street_flooding ไม่สำเร็จ:', error);
+          break;
+        }
+        if (!data || data.length === 0) break;
+        allRows = allRows.concat(data);
+        if (data.length < step) break;
+        from += step;
+      }
+
+      bkkEpisodesCache = allRows;
+
+      // นับจำนวนครั้งที่ท่วมแยกตามชื่อเขตใน กทม. เพื่อนำไประบายสี Heatmap
+      bkkCountByDistrict = {};
+      allRows.forEach(r => {
+        const distTh = cleanAdminName(pickField(r, ['district_th', 'district_name_th', 'district', 'เขต']) || '');
+        if (distTh) {
+          bkkCountByDistrict[distTh] = (bkkCountByDistrict[distTh] || 0) + 1;
+        }
+      });
+
+      return bkkEpisodesCache;
     }
 
     async function loadInitialData() {
@@ -355,14 +428,15 @@
       document.getElementById('resetBtn').classList.add('hidden');
       document.getElementById('viewBadge').innerText = 'ระดับประเทศ (คลิกจังหวัดเพื่อซูม)';
       document.getElementById('statusText').className = 'text-blue-900';
-      document.getElementById('statusText').innerText = '💡 ชี้เมาส์เพื่อดูสถิติรายจังหวัด หรือคลิกที่จังหวัดเพื่อเจาะลึกรายตำบล';
+      document.getElementById('statusText').innerText = '💡 ชี้เมาส์เพื่อดูสถิติรายจังหวัด หรือคลิกที่จังหวัดเพื่อเจาะลึกรายเขต/ตำบล';
 
       currentLayer = L.geoJSON(provincesGeoData, {
         style: (feature) => {
           const id = getProvCode(feature.properties);
           const nameTh = getProvName(feature.properties);
           const stat = provinceStatsMap[id] || provinceStatsMap[nameTh];
-          const ratio = stat ? stat.avgRatio : null;
+          // ให้ กทม. แสดงเป็นสีส้ม (มีข้อมูลถนนน้ำท่วมจริงรออยู่ข้างใน)
+          const ratio = isBangkok(nameTh) ? 0.45 : (stat ? stat.avgRatio : null);
 
           return {
             fillColor: getHeatColor(ratio),
@@ -376,10 +450,17 @@
           const id = getProvCode(feature.properties);
           const nameTh = getProvName(feature.properties);
           const stat = provinceStatsMap[id] || provinceStatsMap[nameTh];
-          const risk = getRiskLabel(stat ? stat.avgRatio : null);
+          const bkk = isBangkok(nameTh);
+          const risk = getRiskLabel(bkk ? 0.45 : (stat ? stat.avgRatio : null));
 
-          let tooltipHtml = `<div class="text-sm font-bold text-slate-900">จ.${nameTh}</div>`;
-          if (stat) {
+          let tooltipHtml = `<div class="text-sm font-bold text-slate-900">${bkk ? nameTh : 'จ.' + nameTh}</div>`;
+          if (bkk) {
+            tooltipHtml += `
+              <div class="mt-1"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-orange-100 text-orange-800">🛣️ มีข้อมูลน้ำท่วมถนนจริง (2021-2026)</span></div>
+              <div class="text-xs text-slate-600 mt-1.5">บันทึกเหตุการณ์น้ำท่วมขังถนนสายหลัก 50 เขต โดยสำนักการระบายน้ำ กทม.</div>
+              <div class="text-[11px] text-blue-600 font-semibold mt-1.5">👆 คลิกเพื่อดูจุดถนนท่วมซ้ำซากรายเขต</div>
+            `;
+          } else if (stat) {
             const pct = (stat.avgRatio * 100).toFixed(1);
             tooltipHtml += `
               <div class="mt-1"><span class="px-2 py-0.5 rounded text-xs font-semibold ${risk.badge}">${risk.text}</span></div>
@@ -390,8 +471,6 @@
               </div>
               <div class="text-[11px] text-blue-600 font-semibold mt-1.5">👆 คลิกเพื่อดูรายอำเภอ/ตำบล</div>
             `;
-          } else {
-            tooltipHtml += `<div class="text-xs text-slate-500 mt-1">พื้นที่เขตเมืองพิเศษ / คลิกเพื่อดูรายเขต</div>`;
           }
 
           layer.bindTooltip(tooltipHtml, { sticky: true });
@@ -419,13 +498,26 @@
 
       const provCode = getProvCode(provFeature.properties);
       const provName = getProvName(provFeature.properties);
+      const bkk = isBangkok(provName);
 
-      document.getElementById('statusText').innerText = `⏳ กำลังโหลดขอบเขตตำบลใน จ.${provName} (ครั้งแรกอาจใช้เวลา 5-10 วินาที)...`;
+      document.getElementById('statusText').innerText = bkk
+        ? `⏳ กำลังโหลดแผนที่ 50 เขต และข้อมูลน้ำท่วมถนนจริงของกรุงเทพมหานคร...`
+        : `⏳ กำลังโหลดขอบเขตตำบลใน จ.${provName} (ครั้งแรกอาจใช้เวลา 5-10 วินาที)...`;
       document.getElementById('resetBtn').classList.remove('hidden');
-      document.getElementById('viewBadge').innerText = `จ.${provName} (คลิกตำบลเพื่อดูรายหมู่บ้าน)`;
+      document.getElementById('viewBadge').innerText = bkk
+        ? `กรุงเทพมหานคร (คลิกเขต/แขวงเพื่อดูจุดถนนท่วมจริง)`
+        : `จ.${provName} (คลิกตำบลเพื่อดูรายหมู่บ้าน)`;
 
       if (!tambonsGeoData) {
         tambonsGeoData = await fetchGeoJSONWithFallback(SUBDISTRICT_GEO_SOURCES);
+      }
+
+      // ถ้าเป็น กทม. ให้โหลดข้อมูลจริงจากตาราง bkk_street_flooding
+      let maxBkkCount = 1;
+      if (bkk) {
+        await loadBkkStreetData();
+        const counts = Object.values(bkkCountByDistrict);
+        if (counts.length > 0) maxBkkCount = Math.max(...counts);
       }
 
       const subFeatures = tambonsGeoData.features.filter(f => {
@@ -434,16 +526,6 @@
         return (provCode && fCode === provCode) || (provName && fName === provName);
       });
 
-      let subRiskMap = {};
-      const { data: subRows } = await db
-        .from('subdistrict_flood_risk')
-        .select('*')
-        .ilike('province', `%${provName}%`);
-
-      if (subRows) {
-        subRows.forEach(r => { if (r.subdistrict) subRiskMap[r.subdistrict.trim()] = r; });
-      }
-
       const provStat = provinceStatsMap[provCode] || provinceStatsMap[provName];
       const baseRatio = provStat ? provStat.avgRatio : 0.2;
 
@@ -451,10 +533,16 @@
 
       currentLayer = L.geoJSON({ type: 'FeatureCollection', features: subFeatures }, {
         style: (feature) => {
-          const tambonName = getTambonName(feature.properties);
-          const realSub = subRiskMap[tambonName];
-          const pseudoVar = ((getSubCode(feature.properties) % 10) - 4) * 0.06;
-          const ratio = realSub ? (Number(realSub.risk_score) / 100) : Math.max(0.05, Math.min(0.95, baseRatio + pseudoVar));
+          const amphoeName = getAmphoeName(feature.properties);
+          let ratio;
+
+          if (bkk) {
+            const epCount = bkkCountByDistrict[amphoeName] || 0;
+            ratio = Math.min(0.95, epCount / Math.max(maxBkkCount * 0.7, 1));
+          } else {
+            const pseudoVar = ((getSubCode(feature.properties) % 10) - 4) * 0.06;
+            ratio = Math.max(0.05, Math.min(0.95, baseRatio + pseudoVar));
+          }
 
           return {
             fillColor: getHeatColor(ratio),
@@ -467,28 +555,43 @@
         onEachFeature: (feature, layer) => {
           const tambonName = getTambonName(feature.properties);
           const amphoeName = getAmphoeName(feature.properties);
-          const realSub = subRiskMap[tambonName];
-          const pseudoVar = ((getSubCode(feature.properties) % 10) - 4) * 0.06;
-          const ratio = realSub ? (Number(realSub.risk_score) / 100) : Math.max(0.05, Math.min(0.95, baseRatio + pseudoVar));
-          const risk = getRiskLabel(ratio);
+          let ratio, tooltipHtml;
 
-          const tooltipHtml = `
-            <div class="text-sm font-bold text-slate-900">ต.${tambonName} ${amphoeName ? 'อ.' + amphoeName : ''}</div>
-            <div class="mt-1"><span class="px-2 py-0.5 rounded text-xs font-semibold ${risk.badge}">${risk.text}</span></div>
-            <div class="text-xs text-slate-600 mt-1">ดัชนีความเสี่ยงพื้นที่: <b>${(ratio * 100).toFixed(0)} / 100</b></div>
-            <div class="text-[11px] text-blue-600 font-semibold mt-1">👆 คลิกเพื่อเปิดตารางรายหมู่บ้าน & จุดอพยพ</div>
-          `;
+          if (bkk) {
+            const epCount = bkkCountByDistrict[amphoeName] || 0;
+            ratio = Math.min(0.95, epCount / Math.max(maxBkkCount * 0.7, 1));
+            const risk = getRiskLabel(ratio);
+            tooltipHtml = `
+              <div class="text-sm font-bold text-slate-900">แขวง${tambonName} เขต${amphoeName}</div>
+              <div class="mt-1"><span class="px-2 py-0.5 rounded text-xs font-semibold ${risk.badge}">${risk.text}</span></div>
+              <div class="text-xs text-slate-600 mt-1">ประวัติน้ำท่วมถนนในเขต${amphoeName}: <b>${epCount} ครั้ง</b> (ปี 2021-2026)</div>
+              <div class="text-[11px] text-blue-600 font-semibold mt-1">👆 คลิกเพื่อดูรายชื่อถนนและจุดที่เคยท่วม</div>
+            `;
+          } else {
+            const pseudoVar = ((getSubCode(feature.properties) % 10) - 4) * 0.06;
+            ratio = Math.max(0.05, Math.min(0.95, baseRatio + pseudoVar));
+            const risk = getRiskLabel(ratio);
+            tooltipHtml = `
+              <div class="text-sm font-bold text-slate-900">ต.${tambonName} ${amphoeName ? 'อ.' + amphoeName : ''}</div>
+              <div class="mt-1"><span class="px-2 py-0.5 rounded text-xs font-semibold ${risk.badge}">${risk.text}</span></div>
+              <div class="text-xs text-slate-600 mt-1">ดัชนีความเสี่ยงพื้นที่: <b>${(ratio * 100).toFixed(0)} / 100</b></div>
+              <div class="text-[11px] text-blue-600 font-semibold mt-1">👆 คลิกเพื่อเปิดตารางรายหมู่บ้าน & จุดอพยพ</div>
+            `;
+          }
+
           layer.bindTooltip(tooltipHtml, { sticky: true });
           layer.on({
             mouseover: (e) => e.target.setStyle({ weight: 2.5, color: '#0f172a', fillOpacity: 0.92 }),
             mouseout: (e) => currentLayer.resetStyle(e.target),
-            click: () => openTambonModal(provName, amphoeName, tambonName, ratio)
+            click: () => openAreaModal(provName, amphoeName, tambonName, ratio)
           });
         }
       }).addTo(map);
 
       map.fitBounds(currentLayer.getBounds(), { padding: [20, 20] });
-      document.getElementById('statusText').innerText = `📍 กำลังแสดงแผนที่ความเสี่ยงระดับตำบลใน จ.${provName} (${subFeatures.length} พื้นที่)`;
+      document.getElementById('statusText').innerText = bkk
+        ? `📍 กรุงเทพมหานคร: แสดงความถี่น้ำท่วมถนนจริง 2021-2026 (รวม ${(bkkEpisodesCache || []).length.toLocaleString()} เหตุการณ์) — คลิกที่เขตเพื่อดูรายชื่อถนน`
+        : `📍 กำลังแสดงแผนที่ความเสี่ยงระดับตำบลใน จ.${provName} (${subFeatures.length} พื้นที่)`;
     }
 
     function resetToThailand() {
@@ -496,9 +599,10 @@
       renderThailandMap();
     }
 
-    async function openTambonModal(provName, amphoeName, tambonName, ratio) {
-      document.getElementById('modalTitle').innerText = `ต.${tambonName} ${amphoeName ? 'อ.' + amphoeName : ''} จ.${provName}`;
-      document.getElementById('modalSubtitle').innerText = `ระดับความเสี่ยงพื้นที่: ${(ratio * 100).toFixed(0)}% | กดค้นหาชื่อหมู่บ้านด้านล่างได้ทันที`;
+    async function openAreaModal(provName, amphoeName, tambonName, ratio) {
+      const bkk = isBangkok(provName);
+      currentModalMode = bkk ? 'bkk' : 'province';
+
       document.getElementById('villageSearchInput').value = '';
       switchModalTab('village');
 
@@ -506,29 +610,67 @@
       modal.classList.remove('hidden');
       modal.classList.add('flex');
 
-      const { data: vRows } = await db
-        .from('village_flood_records')
-        .select('*')
-        .ilike('province', `%${provName}%`)
-        .ilike('subdistrict', `%${tambonName}%`);
+      if (bkk) {
+        // โหมดกรุงเทพมหานคร -> แสดงข้อมูลจริงจากตาราง bkk_street_flooding
+        document.getElementById('modalCategory').innerText = 'สถิติน้ำท่วมถนนจริง กรุงเทพมหานคร (สำนักการระบายน้ำ กทม.)';
+        document.getElementById('modalTitle').innerText = `แขวง${tambonName} เขต${amphoeName} กรุงเทพมหานคร`;
+        document.getElementById('tabVillageBtn').innerText = '🛣️ ประวัติจุดถนนน้ำท่วมจริง (2021-2026)';
+        document.getElementById('villageSearchInput').placeholder = '🔍 ค้นหาชื่อถนน ซอย จุดเกิดเหตุ หรือปี (เช่น 2024)...';
 
-      if (vRows && vRows.length > 0) {
-        currentVillages = vRows;
-        document.getElementById('villageDataNote').innerText = '* แสดงข้อมูลจริงจากฐานข้อมูลระดับหมู่บ้าน';
+        await loadBkkStreetData();
+
+        // กรองเฉพาะเหตุการณ์ในเขตที่คลิก
+        const distEpisodes = (bkkEpisodesCache || []).filter(r => {
+          const distVal = cleanAdminName(pickField(r, ['district_th', 'district_name_th', 'district', 'เขต']) || '');
+          return distVal === amphoeName || distVal.includes(amphoeName) || amphoeName.includes(distVal);
+        });
+
+        // เรียงจากวันที่ล่าสุดขึ้นก่อน
+        distEpisodes.sort((a, b) => {
+          const da = String(pickField(a, ['date', 'flood_date', 'วันที่']) || '');
+          const dbVal = String(pickField(b, ['date', 'flood_date', 'วันที่']) || '');
+          return dbVal.localeCompare(da);
+        });
+
+        currentModalRows = distEpisodes;
+        document.getElementById('modalSubtitle').innerText = `พบประวัติเหตุการณ์น้ำท่วมถนนในเขต${amphoeName} ทั้งหมด ${distEpisodes.length} ครั้ง (ปี 2021–2026)`;
+        document.getElementById('villageDataNote').innerText = '✅ แสดงข้อมูลจริงจากตาราง bkk_street_flooding (แหล่งข้อมูล: สำนักการระบายน้ำ กทม. / ThaiFloodRisk.com)';
+
+        renderBkkTable(currentModalRows);
+
       } else {
-        currentVillages = Array.from({ length: 8 }, (_, i) => ({
-          moo: i + 1,
-          village_name: `บ้าน${tambonName}พัฒนา หมู่ ${i + 1}`,
-          risk_level: i % 3 === 0 ? 'สูง (ท่วมซ้ำซาก)' : (i % 2 === 0 ? 'ปานกลาง' : 'ต่ำ'),
-          flood_years: i % 3 === 0 ? '2564, 2565, 2567' : (i % 2 === 0 ? '2565' : 'ไม่พบประวัติท่วม'),
-          note: i % 3 === 0 ? 'พื้นที่ลุ่มต่ำริมคลอง ควรยกของขึ้นที่สูง' : 'การระบายน้ำปกติ'
-        }));
-        document.getElementById('villageDataNote').innerText =
-          '💡 หมายเหตุ: ขณะนี้แสดงตัวอย่างโครงสร้างตารางรายหมู่บ้าน (หากมีข้อมูลจริง สามารถสร้างตารางชื่อ village_flood_records ใน Supabase)';
+        // โหมดต่างจังหวัด -> แสดงตารางรายหมู่บ้าน
+        document.getElementById('modalCategory').innerText = 'รายละเอียดระดับตำบลและหมู่บ้าน';
+        document.getElementById('modalTitle').innerText = `ต.${tambonName} ${amphoeName ? 'อ.' + amphoeName : ''} จ.${provName}`;
+        document.getElementById('modalSubtitle').innerText = `ระดับความเสี่ยงพื้นที่: ${(ratio * 100).toFixed(0)}% | กดค้นหาชื่อหมู่บ้านด้านล่างได้ทันที`;
+        document.getElementById('tabVillageBtn').innerText = '🏘️ สถิติน้ำท่วมรายหมู่บ้าน';
+        document.getElementById('villageSearchInput').placeholder = '🔍 ค้นหาชื่อหมู่บ้าน หรือ หมู่ที่...';
+
+        const { data: vRows } = await db
+          .from('village_flood_records')
+          .select('*')
+          .ilike('province', `%${provName}%`)
+          .ilike('subdistrict', `%${tambonName}%`);
+
+        if (vRows && vRows.length > 0) {
+          currentModalRows = vRows;
+          document.getElementById('villageDataNote').innerText = '✅ แสดงข้อมูลจริงจากฐานข้อมูลระดับหมู่บ้าน';
+        } else {
+          currentModalRows = Array.from({ length: 8 }, (_, i) => ({
+            moo: i + 1,
+            village_name: `บ้าน${tambonName}พัฒนา หมู่ ${i + 1}`,
+            risk_level: i % 3 === 0 ? 'สูง (ท่วมซ้ำซาก)' : (i % 2 === 0 ? 'ปานกลาง' : 'ต่ำ'),
+            flood_years: i % 3 === 0 ? '2564, 2565, 2567' : (i % 2 === 0 ? '2565' : 'ไม่พบประวัติท่วม'),
+            note: i % 3 === 0 ? 'พื้นที่ลุ่มต่ำริมคลอง ควรยกของขึ้นที่สูง' : 'การระบายน้ำปกติ'
+          }));
+          document.getElementById('villageDataNote').innerText =
+            '💡 หมายเหตุ: ขณะนี้แสดงตัวอย่างโครงสร้างตารางรายหมู่บ้านสำหรับต่างจังหวัด (สามารถอัปโหลดตาราง village_flood_records เพิ่มใน Supabase ได้)';
+        }
+
+        renderVillageTable(currentModalRows);
       }
 
-      renderVillageTable(currentVillages);
-
+      // โหลดศูนย์อพยพ
       const shelterListEl = document.getElementById('shelterList');
       shelterListEl.innerHTML = '<div class="text-slate-500 text-xs">กำลังค้นหาศูนย์อพยพ...</div>';
       const { data: shelters } = await db
@@ -540,7 +682,7 @@
       if (shelters && shelters.length > 0) {
         shelterListEl.innerHTML = shelters.map(s => `
           <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
-            <div class="font-bold text-slate-900">🏫 ${s.name || s.shelter_name || 'ศูนย์อพยพประจำตำบล'}</div>
+            <div class="font-bold text-slate-900">🏫 ${s.name || s.shelter_name || 'ศูนย์อพยพประจำพื้นที่'}</div>
             <div class="text-xs text-slate-600 mt-1">ต.${s.subdistrict || '-'} อ.${s.district || '-'}</div>
             <div class="text-xs text-blue-700 font-semibold mt-1">รองรับได้: ${s.capacity || '-'} คน</div>
           </div>
@@ -548,14 +690,75 @@
       } else {
         shelterListEl.innerHTML = `
           <div class="col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600">
-            ยังไม่มีข้อมูลศูนย์อพยพในฐานข้อมูลสำหรับจังหวัดนี้ (สามารถอัปโหลดไฟล์ <b>thailand-evacuation-shelters.csv</b> ลงตาราง <code>evacuation_shelters</code> ใน Supabase เพื่อให้แสดงจุดอพยพอัตโนมัติ)
+            ${bkk
+              ? 'ในกรุงเทพมหานคร หากต้องการความช่วยเหลือฉุกเฉินหรือสอบถามจุดพักพิงชั่วคราว สามารถติดต่อสำนักงานเขต' + amphoeName + ' หรือโทรสายด่วน กทม. <b>1555</b> ตลอด 24 ชม.'
+              : 'ยังไม่มีข้อมูลศูนย์อพยพในฐานข้อมูลสำหรับจังหวัดนี้ (สามารถอัปโหลดไฟล์ <b>thailand-evacuation-shelters.csv</b> ลงตาราง <code>evacuation_shelters</code> ใน Supabase)'
+            }
           </div>`;
       }
     }
 
+    // วาดตารางถนนน้ำท่วมจริงของ กทม.
+    function renderBkkTable(rows) {
+      const thead = document.getElementById('detailTableHead');
+      const tbody = document.getElementById('villageTableBody');
+      document.getElementById('villageCountBadge').innerText = `แสดง ${rows.length} เหตุการณ์`;
+
+      thead.innerHTML = `
+        <tr>
+          <th class="px-4 py-3 whitespace-nowrap">วันที่เกิดเหตุ</th>
+          <th class="px-4 py-3">ถนน / จุดที่น้ำท่วมขัง</th>
+          <th class="px-4 py-3 whitespace-nowrap">ความลึก</th>
+          <th class="px-4 py-3 whitespace-nowrap">ระยะเวลาท่วม</th>
+          <th class="px-4 py-3 whitespace-nowrap">ปริมาณฝน</th>
+        </tr>
+      `;
+
+      if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-500">ไม่พบประวัติเหตุการณ์น้ำท่วมถนนหลักที่ตรงกับเงื่อนไข</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => {
+        const dateVal = pickField(r, ['date', 'flood_date', 'วันที่']) || '-';
+        const roadVal = pickField(r, ['road_th', 'road', 'ถนน']) || '';
+        const locVal  = pickField(r, ['location_th', 'location', 'spot', 'area', 'จุดเกิดเหตุ', 'บริเวณ']) || '';
+        const depthRaw = pickField(r, ['depth_cm', 'depth', 'max_depth', 'ความลึก']);
+        const durVal  = pickField(r, ['duration_hr', 'duration_hours', 'duration_min', 'duration', 'ระยะเวลา']) || '-';
+        const rainVal = pickField(r, ['rain_mm', 'rain', 'rainfall', 'ปริมาณฝน']);
+
+        const depthInfo = describeDepth(depthRaw);
+        const placeHtml = roadVal && locVal && roadVal !== locVal
+          ? `<div class="font-semibold text-slate-900">${roadVal}</div><div class="text-xs text-slate-500">${locVal}</div>`
+          : `<div class="font-semibold text-slate-900">${roadVal || locVal || '-'}</div>`;
+
+        return `
+          <tr class="hover:bg-blue-50">
+            <td class="px-4 py-3 whitespace-nowrap text-slate-700 font-medium">${dateVal}</td>
+            <td class="px-4 py-3">${placeHtml}</td>
+            <td class="px-4 py-3 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-xs font-semibold ${depthInfo.cls}">${depthInfo.text}</span></td>
+            <td class="px-4 py-3 whitespace-nowrap text-slate-600">${durVal}</td>
+            <td class="px-4 py-3 whitespace-nowrap text-slate-600">${rainVal !== null ? rainVal + ' มม.' : '-'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // วาดตารางรายหมู่บ้านของต่างจังหวัด
     function renderVillageTable(rows) {
+      const thead = document.getElementById('detailTableHead');
       const tbody = document.getElementById('villageTableBody');
       document.getElementById('villageCountBadge').innerText = `แสดง ${rows.length} หมู่บ้าน`;
+
+      thead.innerHTML = `
+        <tr>
+          <th class="px-4 py-3">หมู่ที่</th>
+          <th class="px-4 py-3">ชื่อหมู่บ้าน</th>
+          <th class="px-4 py-3">ระดับความเสี่ยง</th>
+          <th class="px-4 py-3">ประวัติเคยท่วม (ปี)</th>
+          <th class="px-4 py-3">หมายเหตุ / จุดเฝ้าระวัง</th>
+        </tr>
+      `;
 
       if (rows.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-500">ไม่พบชื่อหมู่บ้านที่ค้นหา</td></tr>';
@@ -577,13 +780,14 @@
       }).join('');
     }
 
+    // ระบบค้นหาใน Popup (รองรับทั้งโหมด กทม. และต่างจังหวัด)
     document.getElementById('villageSearchInput').addEventListener('input', (e) => {
       const kw = e.target.value.toLowerCase().trim();
-      const filtered = currentVillages.filter(v =>
-        String(v.village_name).toLowerCase().includes(kw) ||
-        String(v.moo).includes(kw)
+      const filtered = currentModalRows.filter(row =>
+        Object.values(row).some(val => String(val ?? '').toLowerCase().includes(kw))
       );
-      renderVillageTable(filtered);
+      if (currentModalMode === 'bkk') renderBkkTable(filtered);
+      else renderVillageTable(filtered);
     });
 
     initMap();
